@@ -7944,40 +7944,49 @@ event:重要程度|事件简述（30-50字，重要程度：一般/重要/关键
                 cancelPromise.then(() => null)
             ]);
             if (cancelled) break;
-            if (response) {
-                const segments = response.split(/===消息#(\d+)===/);
-                for (let s = 1; s < segments.length; s += 2) {
-                    const msgIndex = parseInt(segments[s]);
-                    const content = segments[s + 1] || '';
-                    if (isNaN(msgIndex)) continue;
-                    const parsed = horaeManager.parseHoraeTag(content);
-                    if (parsed) {
-                        parsed.costumes = {};
-                        if (!includeScene) parsed.scene = {};
-                        parsed.agenda = [];
-                        parsed.deletedAgenda = [];
-                        parsed.deletedItems = [];
-                        if (!includeNpc) parsed.npcs = {};
-                        if (!includeAffection) parsed.affection = {};
-                        if (!includeRelationship) parsed.relationships = [];
+            if (!response) {
+                console.warn(`[Horae] 第 ${b + 1} 批：AI 未返回内容`);
+                showToast(`第 ${b + 1} 批：AI 未返回内容（可能被内容审查拦截）`, 'warning');
+                continue;
+            }
+            const segments = response.split(/===消息#(\d+)===/);
+            if (segments.length <= 1) {
+                console.warn(`[Horae] 第 ${b + 1} 批：AI 回复格式不匹配（未找到 ===消息#N=== 分隔符）`, response.substring(0, 300));
+                showToast(`第 ${b + 1} 批：AI 回复格式不匹配，请重试`, 'warning');
+                continue;
+            }
+            for (let s = 1; s < segments.length; s += 2) {
+                const msgIndex = parseInt(segments[s]);
+                const content = segments[s + 1] || '';
+                if (isNaN(msgIndex)) continue;
+                const parsed = horaeManager.parseHoraeTag(content);
+                if (parsed) {
+                    parsed.costumes = {};
+                    if (!includeScene) parsed.scene = {};
+                    parsed.agenda = [];
+                    parsed.deletedAgenda = [];
+                    parsed.deletedItems = [];
+                    if (!includeNpc) parsed.npcs = {};
+                    if (!includeAffection) parsed.affection = {};
+                    if (!includeRelationship) parsed.relationships = [];
 
-                        const existingMeta = horaeManager.getMessageMeta(msgIndex) || createEmptyMeta();
-                        const newMeta = horaeManager.mergeParsedToMeta(existingMeta, parsed);
-                        if (newMeta._tableUpdates) {
-                            newMeta.tableContributions = newMeta._tableUpdates;
-                            delete newMeta._tableUpdates;
-                        }
-                        newMeta._aiScanned = true;
-
-                        const chatRef = horaeManager.getChat();
-                        const preview = (chatRef[msgIndex]?.mes || '').substring(0, 60);
-                        scanResults.push({ msgIndex, newMeta, preview, _deleted: false });
+                    const existingMeta = horaeManager.getMessageMeta(msgIndex) || createEmptyMeta();
+                    const newMeta = horaeManager.mergeParsedToMeta(existingMeta, parsed);
+                    if (newMeta._tableUpdates) {
+                        newMeta.tableContributions = newMeta._tableUpdates;
+                        delete newMeta._tableUpdates;
                     }
+                    newMeta._aiScanned = true;
+
+                    const chatRef = horaeManager.getChat();
+                    const preview = (chatRef[msgIndex]?.mes || '').substring(0, 60);
+                    scanResults.push({ msgIndex, newMeta, preview, _deleted: false });
                 }
             }
         } catch (err) {
             if (cancelled || err?.name === 'AbortError') break;
             console.error(`[Horae] 第 ${b + 1} 批摘要失败:`, err);
+            showToast(`第 ${b + 1} 批：AI 请求失败，请检查 API 连接`, 'error');
         }
 
         if (b < batches.length - 1 && !cancelled) {
@@ -8587,6 +8596,8 @@ async function onMessageReceived(messageId) {
     setTimeout(() => {
         const messageEl = document.querySelector(`.mes[mesid="${messageId}"]`);
         if (messageEl) {
+            const oldPanel = messageEl.querySelector('.horae-message-panel');
+            if (oldPanel) oldPanel.remove();
             addMessagePanel(messageEl, messageId);
         }
     }, 100);
@@ -8726,40 +8737,33 @@ function onMessageRendered(messageId) {
     }, 100);
 }
 
-/** swipe切换分页时触发 — 从当前mes重新解析并刷新底部栏 */
+/** swipe切换分页时触发 — 重置meta、重新解析并刷新所有显示 */
 function onSwipePanel(messageId) {
-    if (!settings.enabled || !settings.showMessagePanel) return;
+    if (!settings.enabled) return;
     
     setTimeout(() => {
-        const messageEl = document.querySelector(`.mes[mesid="${messageId}"]`);
-        if (!messageEl) return;
-        
         const msg = horaeManager.getChat()[messageId];
         if (!msg || msg.is_user) return;
         
-        let parsed = horaeManager.parseHoraeTag(msg.mes || '');
-        if (!parsed) parsed = horaeManager.parseLooseFormat(msg.mes || '');
-        if (parsed) {
-            const newMeta = createEmptyMeta();
-            newMeta.timestamp = parsed.timestamp || {};
-            newMeta.scene = parsed.scene || {};
-            newMeta.costumes = parsed.costumes || {};
-            newMeta.items = parsed.items || {};
-            newMeta.deletedItems = parsed.deletedItems || [];
-            newMeta.events = parsed.events || (parsed.event ? [parsed.event] : []);
-            newMeta.affection = parsed.affection || {};
-            newMeta.npcs = parsed.npcs || {};
-            newMeta.agenda = parsed.agenda || [];
-            horaeManager.setMessageMeta(messageId, newMeta);
-        }
+        msg.horae_meta = createEmptyMeta();
+        horaeManager.processAIResponse(messageId, msg.mes);
         
-        // swipe 可能改变表格贡献，重建表格数据
         horaeManager.rebuildTableData();
+        horaeManager.rebuildRelationships();
+        horaeManager.rebuildLocationMemory();
+        getContext().saveChat();
         
-        // 移除旧面板并重建
-        const oldPanel = messageEl.querySelector('.horae-message-panel');
-        if (oldPanel) oldPanel.remove();
-        addMessagePanel(messageEl, messageId);
+        refreshAllDisplays();
+        renderCustomTablesList();
+        
+        if (settings.showMessagePanel) {
+            const messageEl = document.querySelector(`.mes[mesid="${messageId}"]`);
+            if (messageEl) {
+                const oldPanel = messageEl.querySelector('.horae-message-panel');
+                if (oldPanel) oldPanel.remove();
+                addMessagePanel(messageEl, messageId);
+            }
+        }
     }, 150);
 }
 
