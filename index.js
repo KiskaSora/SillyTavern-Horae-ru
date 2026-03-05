@@ -3,7 +3,7 @@
  * 基于时间锚点的AI记忆增强系统
  * 
  * 作者: SenriYuki
- * 版本: 1.8.2
+ * 版本: 1.8.3
  */
 
 import { renderExtensionTemplateAsync, getContext, extension_settings } from '/scripts/extensions.js';
@@ -20,7 +20,7 @@ import { calculateRelativeTime, calculateDetailedRelativeTime, formatRelativeTim
 const EXTENSION_NAME = 'horae';
 const EXTENSION_FOLDER = `third-party/SillyTavern-Horae`;
 const TEMPLATE_PATH = `${EXTENSION_FOLDER}/assets/templates`;
-const VERSION = '1.8.2';
+const VERSION = '1.8.3';
 
 // 配套正则规则（自动注入ST原生正则系统）
 const HORAE_REGEX_RULES = [
@@ -4863,6 +4863,151 @@ function refreshAllDisplays() {
     updateLocationMemoryDisplay();
     updateRpgDisplay();
     updateTokenCounter();
+    enforceHiddenState();
+}
+
+/**
+ * 提取消息事件上的摘要压缩标记（_compressedBy / _summaryId），
+ * 用于在 createEmptyMeta() 重置后恢复，防止摘要事件从时间线中逃逸
+ */
+function _saveCompressedFlags(meta) {
+    if (!meta?.events?.length) return null;
+    const flags = [];
+    for (const evt of meta.events) {
+        if (evt._compressedBy || evt._summaryId) {
+            flags.push({
+                summary: evt.summary || '',
+                _compressedBy: evt._compressedBy || null,
+                _summaryId: evt._summaryId || null,
+                isSummary: !!evt.isSummary,
+            });
+        }
+    }
+    return flags.length ? flags : null;
+}
+
+/**
+ * 将保存的压缩标记恢复到重新解析后的事件上；
+ * 若新事件数量少于保存的标记，则将多出的摘要事件追加回去
+ */
+function _restoreCompressedFlags(meta, saved) {
+    if (!saved?.length || !meta) return;
+    if (!meta.events) meta.events = [];
+    const nonSummaryFlags = saved.filter(f => !f.isSummary);
+    const summaryFlags = saved.filter(f => f.isSummary);
+    for (let i = 0; i < Math.min(nonSummaryFlags.length, meta.events.length); i++) {
+        const evt = meta.events[i];
+        if (evt.isSummary || evt._summaryId) continue;
+        if (nonSummaryFlags[i]._compressedBy) {
+            evt._compressedBy = nonSummaryFlags[i]._compressedBy;
+        }
+    }
+    // 如果非摘要事件数量不匹配，按 summaryId 暴力匹配
+    if (nonSummaryFlags.length > 0 && meta.events.length > 0) {
+        const chat = horaeManager.getChat();
+        const sums = chat?.[0]?.horae_meta?.autoSummaries || [];
+        const activeSumIds = new Set(sums.filter(s => s.active).map(s => s.id));
+        for (const evt of meta.events) {
+            if (evt.isSummary || evt._summaryId || evt._compressedBy) continue;
+            const matchFlag = nonSummaryFlags.find(f => f._compressedBy && activeSumIds.has(f._compressedBy));
+            if (matchFlag) evt._compressedBy = matchFlag._compressedBy;
+        }
+    }
+    // 将摘要卡片事件追加回去（processAIResponse 不会从原文解析出摘要卡片）
+    for (const sf of summaryFlags) {
+        const alreadyExists = meta.events.some(e => e._summaryId === sf._summaryId);
+        if (!alreadyExists && sf._summaryId) {
+            meta.events.push({
+                summary: sf.summary,
+                isSummary: true,
+                _summaryId: sf._summaryId,
+                level: '摘要',
+            });
+        }
+    }
+}
+
+/**
+ * 校验并修复摘要范围内消息的 is_hidden 和 _compressedBy 状态，
+ * 防止 SillyTavern 重渲染或 saveChat 竞态导致隐藏/压缩标记丢失
+ */
+function enforceHiddenState() {
+    const chat = horaeManager.getChat();
+    if (!chat?.length) return;
+    const sums = chat[0]?.horae_meta?.autoSummaries;
+    if (!sums?.length) return;
+
+    let fixed = 0;
+    for (const s of sums) {
+        if (!s.active || !s.range) continue;
+        const summaryId = s.id;
+        for (let i = s.range[0]; i <= s.range[1]; i++) {
+            if (i === 0 || !chat[i]) continue;
+            // 修复 is_hidden
+            if (!chat[i].is_hidden) {
+                chat[i].is_hidden = true;
+                fixed++;
+                const $el = $(`.mes[mesid="${i}"]`);
+                if ($el.length) $el.attr('is_hidden', 'true');
+            }
+            // 修复 _compressedBy
+            const events = chat[i].horae_meta?.events;
+            if (events) {
+                for (const evt of events) {
+                    if (!evt.isSummary && !evt._summaryId && !evt._compressedBy) {
+                        evt._compressedBy = summaryId;
+                        fixed++;
+                    }
+                }
+            }
+        }
+    }
+    if (fixed > 0) {
+        console.log(`[Horae] enforceHiddenState: 修复了 ${fixed} 处摘要状态`);
+        getContext().saveChat();
+    }
+}
+
+/**
+ * 手动一键修复：遍历所有活跃摘要，强制恢复 is_hidden + _compressedBy，
+ * 并同步 DOM 属性。返回修复的条目数。
+ */
+function repairAllSummaryStates() {
+    const chat = horaeManager.getChat();
+    if (!chat?.length) return 0;
+    const sums = chat[0]?.horae_meta?.autoSummaries;
+    if (!sums?.length) return 0;
+
+    let fixed = 0;
+    for (const s of sums) {
+        if (!s.active || !s.range) continue;
+        const summaryId = s.id;
+        for (let i = s.range[0]; i <= s.range[1]; i++) {
+            if (i === 0 || !chat[i]) continue;
+            // 强制 is_hidden
+            if (!chat[i].is_hidden) {
+                chat[i].is_hidden = true;
+                fixed++;
+            }
+            const $el = $(`.mes[mesid="${i}"]`);
+            if ($el.length) $el.attr('is_hidden', 'true');
+            // 强制 _compressedBy
+            const events = chat[i].horae_meta?.events;
+            if (events) {
+                for (const evt of events) {
+                    if (!evt.isSummary && !evt._summaryId && !evt._compressedBy) {
+                        evt._compressedBy = summaryId;
+                        fixed++;
+                    }
+                }
+            }
+        }
+    }
+    if (fixed > 0) {
+        console.log(`[Horae] repairAllSummaryStates: 修复了 ${fixed} 处`);
+        getContext().saveChat();
+    }
+    return fixed;
 }
 
 /** 刷新所有已展开的底部面板 */
@@ -7360,6 +7505,16 @@ function initSettingsEvents() {
     $('#horae-btn-ai-scan').on('click', batchAIScan);
     $('#horae-btn-undo-ai-scan').on('click', undoAIScan);
     
+    $('#horae-btn-fix-summaries').on('click', () => {
+        const result = repairAllSummaryStates();
+        if (result > 0) {
+            updateTimelineDisplay();
+            showToast(`已修复 ${result} 处摘要状态`, 'success');
+        } else {
+            showToast('所有摘要状态正常，无需修复', 'info');
+        }
+    });
+    
     $('#horae-timeline-filter').on('change', updateTimelineDisplay);
     $('#horae-timeline-search').on('input', updateTimelineDisplay);
     
@@ -9152,10 +9307,14 @@ async function checkAutoSummary() {
             timestamp: chat[e.msgIdx]?.horae_meta?.timestamp
         }));
         
+        // 完整隐藏范围（包含中间所有 USER 消息）
+        const hideMin = Math.max(1, msgIndices[0]);
+        const hideMax = msgIndices[msgIndices.length - 1];
+
         const summaryId = `as_${Date.now()}`;
         firstMsg.horae_meta.autoSummaries.push({
             id: summaryId,
-            range: [msgIndices[0], msgIndices[msgIndices.length - 1]],
+            range: [hideMin, hideMax],
             summaryText,
             originalEvents,
             active: true,
@@ -9164,7 +9323,6 @@ async function checkAutoSummary() {
         });
         
         // 标记原始事件为已压缩（active 时隐藏原始事件显示摘要）
-        // #0 的事件不标记，保留其时间线用于时间计算
         for (const e of bufferEvents) {
             if (e.msgIdx === 0) continue;
             const meta = chat[e.msgIdx]?.horae_meta;
@@ -9173,7 +9331,7 @@ async function checkAutoSummary() {
             }
         }
         
-        // 插入摘要事件卡片：优先放在有事件的消息上，否则放在范围内首条消息
+        // 插入摘要事件卡片：优先放在有事件的消息上，否则放在范围首条
         const targetIdx = bufferEvents.length > 0 ? bufferEvents[0].msgIdx : msgIndices[0];
         if (!chat[targetIdx].horae_meta) chat[targetIdx].horae_meta = createEmptyMeta();
         const targetMeta = chat[targetIdx].horae_meta;
@@ -9186,8 +9344,10 @@ async function checkAutoSummary() {
             _summaryId: summaryId
         });
         
-        // /hide 被摘要的消息楼层（省 token，active 时不发送给 AI）
-        await setMessagesHidden(chat, msgIndices, true);
+        // /hide 整个范围内的消息楼层
+        const fullRangeIndices = [];
+        for (let i = hideMin; i <= hideMax; i++) fullRangeIndices.push(i);
+        await setMessagesHidden(chat, fullRangeIndices, true);
         
         await context.saveChat();
         updateTimelineDisplay();
@@ -10137,13 +10297,16 @@ async function onMessageReceived(messageId) {
     
     // regenerate/swipe 检测：若已有 meta 则为重新生成，清空旧数据再解析
     const isRegenerate = !!(message.horae_meta?.timestamp?.absolute);
+    let savedFlags = null;
     if (isRegenerate) {
+        savedFlags = _saveCompressedFlags(message.horae_meta);
         message.horae_meta = createEmptyMeta();
     }
     
     const hasTag = horaeManager.processAIResponse(messageId, message.mes);
     
     if (isRegenerate) {
+        _restoreCompressedFlags(message.horae_meta, savedFlags);
         horaeManager.rebuildTableData();
         horaeManager.rebuildRelationships();
         horaeManager.rebuildLocationMemory();
@@ -10208,10 +10371,12 @@ function onMessageEdited(messageId) {
     const message = chat[messageId];
     if (!message || message.is_user) return;
     
-    // 完全重置该消息的 meta，从新正文重新解析
+    // 保存摘要压缩标记后重置 meta，解析完再恢复
+    const savedFlags = _saveCompressedFlags(message.horae_meta);
     message.horae_meta = createEmptyMeta();
     
     horaeManager.processAIResponse(messageId, message.mes);
+    _restoreCompressedFlags(message.horae_meta, savedFlags);
     
     horaeManager.rebuildTableData();
     horaeManager.rebuildRelationships();
@@ -10362,8 +10527,10 @@ function onSwipePanel(messageId) {
         const msg = horaeManager.getChat()[messageId];
         if (!msg || msg.is_user) return;
         
+        const savedFlags = _saveCompressedFlags(msg.horae_meta);
         msg.horae_meta = createEmptyMeta();
         horaeManager.processAIResponse(messageId, msg.mes);
+        _restoreCompressedFlags(msg.horae_meta, savedFlags);
         
         horaeManager.rebuildTableData();
         horaeManager.rebuildRelationships();
