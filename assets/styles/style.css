@@ -34,9 +34,8 @@
 .horae-message-panel,
 .horae-modal,
 .horae-context-menu,
-.horae-progress-overlay {
-    color: var(--horae-text);
-}
+.horae-progress-overlay,
+
 
 /* 输入框隔离 */
 #horae_drawer input:not([type="checkbox"]):not([type="radio"]),
@@ -5198,4 +5197,124 @@ body .horae-context-menu {
     outline: 2px solid var(--horae-primary, #7c3aed) !important;
     outline-offset: 3px;
     border-radius: var(--horae-radius-sm, 6px);
+}
+
+/* ============================================
+   Плавающая иконка Horae
+   ============================================ */
+
+#horae-float-btn {
+    position: fixed !important;
+    right: 16px;
+    bottom: 80px;
+    z-index: 9999;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    /* Цвет устанавливается JS при смене темы, fallback — фиолетовый */
+    background: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed));
+    color: #fff !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.45);
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+#horae-float-btn:hover {
+    box-shadow: 0 6px 24px rgba(124, 58, 237, 0.65);
+    transform: scale(1.08);
+}
+
+#horae-float-btn.horae-float-dragging {
+    cursor: grabbing !important;
+    transform: scale(1.12);
+    box-shadow: 0 8px 30px rgba(124, 58, 237, 0.7);
+    transition: none;
+}
+
+#horae-float-btn i {
+    pointer-events: none;
+}
+
+/* На мобиле чуть крупнее для удобства */
+@media (max-width: 768px) {
+    #horae-float-btn {
+        width: 52px;
+        height: 52px;
+        font-size: 22px;
+    }
+}
+
+
+/* Режим иконки - радио-кнопки */
+.horae-icon-mode-option {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--horae-radius-sm, 6px);
+    border: 1px solid var(--horae-border, #555);
+    background: var(--horae-bg-secondary, #2a2a3a) !important;
+    background-image: none !important;
+    color: var(--horae-text-muted, #aaa);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.horae-icon-mode-option input[type="radio"] {
+    display: none !important;
+}
+
+.horae-icon-mode-option:has(input:checked) {
+    background: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed)) !important;
+    background-image: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed)) !important;
+    border-color: var(--horae-primary, #7c3aed) !important;
+    color: #fff !important;
+}
+
+.horae-icon-mode-option:hover {
+    border-color: var(--horae-primary, #7c3aed);
+    color: var(--horae-text, #e2e2f0);
+}
+
+
+}
+
+/* Затемнение фона при открытой плавающей панели */
+
+
+/* === Плавающий режим иконки === */
+
+/* Скрыть иконку из топбара в float-режиме */
+#horae_drawer.horae-drawer-hidden {
+    display: none !important;
+}
+
+/* Центрировать панель в float-режиме */
+#horae_drawer_content.horae-float-panel.openDrawer {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 9998 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    width: min(700px, 95vw) !important;
+    border-radius: var(--horae-radius, 8px) !important;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6) !important;
+    animation: horae-panel-appear 0.18s ease;
+}
+
+@keyframes horae-panel-appear {
+    from { opacity: 0; transform: translate(-50%, -47%); }
+    to   { opacity: 1; transform: translate(-50%, -50%); }
 }
