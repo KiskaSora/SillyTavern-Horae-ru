@@ -78,9 +78,9 @@
 .horae-modal input[type="checkbox"] {
     -webkit-appearance: none !important;
     appearance: none !important;
-    background: white !important;
+    background: var(--horae-bg-secondary, #2a2a3a) !important;
     background-image: none !important;
-    border: 2px solid #888 !important;
+    border: 2px solid var(--horae-border, #555) !important;
     border-radius: 3px !important;
     opacity: 1 !important;
     position: static !important;
@@ -101,8 +101,8 @@
 #horae_drawer input[type="checkbox"]:checked,
 .horae-message-panel input[type="checkbox"]:checked,
 .horae-modal input[type="checkbox"]:checked {
-    background: white !important;
-    border-color: #555 !important;
+    background: var(--horae-primary, #7c3aed) !important;
+    border-color: var(--horae-primary, #7c3aed) !important;
 }
 
 #horae_drawer input[type="checkbox"]:checked::after,
@@ -111,7 +111,7 @@
     content: '✓' !important;
     display: block !important;
     text-align: center !important;
-    color: #222 !important;
+    color: #fff !important;
     font-size: 12px !important;
     font-weight: 700 !important;
     line-height: 12px !important;
@@ -373,13 +373,13 @@
     justify-content: center;
     gap: 6px;
     padding: 8px 16px;
-    background: var(--horae-bg-secondary);
-    border: 1px solid var(--horae-border);
-    border-radius: var(--horae-radius-sm);
-    color: var(--horae-text);
-    cursor: pointer;
-    font-size: 13px;
-    transition: all 0.2s ease;
+    background: var(--horae-bg-secondary) !important;
+    border: 1px solid var(--horae-border) !important;
+    border-radius: var(--horae-radius-sm) !important;
+    color: var(--horae-text) !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    transition: all 0.2s ease !important;
     background-image: none !important;
     opacity: 1 !important;
 }
@@ -418,19 +418,20 @@
 }
 
 .horae-data-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 16px 12px;
-    background: var(--horae-bg);
-    border: 1px solid var(--horae-border);
-    border-radius: var(--horae-radius);
-    color: var(--horae-text);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 70px;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 16px 12px !important;
+    background: var(--horae-bg) !important;
+    background-image: none !important;
+    border: 1px solid var(--horae-border) !important;
+    border-radius: var(--horae-radius) !important;
+    color: var(--horae-text) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    min-height: 70px !important;
 }
 
 .horae-data-btn i {
@@ -1179,9 +1180,39 @@
 }
 
 .horae-setting-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--horae-primary);
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    background: var(--horae-bg-secondary, #2a2a3a) !important;
+    background-image: none !important;
+    border: 2px solid var(--horae-border, #555) !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    opacity: 1 !important;
+    margin: 0 !important;
+}
+
+.horae-setting-item input[type="checkbox"]:checked {
+    background: var(--horae-primary, #7c3aed) !important;
+    border-color: var(--horae-primary, #7c3aed) !important;
+    background-image: none !important;
+}
+
+.horae-setting-item input[type="checkbox"]:checked::after {
+    content: '✓' !important;
+    display: block !important;
+    text-align: center !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    line-height: 14px !important;
 }
 
 .horae-setting-item input[type="number"] {
@@ -2019,7 +2050,7 @@
 }
 
 .horae-npc-appearance::before {
-    content: "外貌: ";
+    content: "Внеш.: ";
     opacity: 0.7;
 }
 
@@ -2029,7 +2060,7 @@
 }
 
 .horae-npc-personality::before {
-    content: "性格: ";
+    content: "Хар.: ";
     opacity: 0.7;
 }
 
@@ -2039,7 +2070,7 @@
 }
 
 .horae-npc-relationship::before {
-    content: "关系: ";
+    content: "Отн.: ";
     opacity: 0.7;
 }
 
@@ -5081,4 +5112,90 @@ body .horae-context-menu {
 .horae-rpg-dice-inject:hover { opacity: 0.85; }
 @media screen and (max-width: 768px) {
     .horae-rpg-dice-body { width: 220px; }
+}
+
+/* === Tutorial / Onboarding Card === */
+.horae-tutorial-card {
+    background: var(--horae-bg-secondary, #1e1e2e);
+    border: 1px solid var(--horae-primary, #7c3aed);
+    border-radius: var(--horae-radius, 10px);
+    margin: 12px 0;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
+}
+
+.horae-tutorial-card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed));
+    color: #fff;
+    font-size: 13px;
+}
+
+.horae-tutorial-step-indicator {
+    font-size: 11px;
+    opacity: 0.75;
+    background: rgba(255,255,255,0.15);
+    padding: 2px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.horae-tutorial-card-body {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--horae-text, #e2e2f0);
+    line-height: 1.6;
+}
+
+.horae-tutorial-card-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--horae-bg-primary, #16161e);
+    border-top: 1px solid var(--horae-border, #333);
+}
+
+.horae-tutorial-skip {
+    padding: 6px 14px !important;
+    border-radius: var(--horae-radius-sm, 6px) !important;
+    border: 1px solid var(--horae-border, #555) !important;
+    background: var(--horae-bg-secondary, #2a2a3a) !important;
+    background-image: none !important;
+    color: var(--horae-text-muted, #aaa) !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+
+.horae-tutorial-skip:hover {
+    background: var(--horae-bg-hover, #3a3a4a) !important;
+    color: var(--horae-text, #e2e2f0) !important;
+}
+
+.horae-tutorial-next {
+    padding: 6px 16px !important;
+    border-radius: var(--horae-radius-sm, 6px) !important;
+    border: none !important;
+    background: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed)) !important;
+    background-image: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed)) !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+
+.horae-tutorial-next:hover {
+    background: linear-gradient(135deg, var(--horae-primary, #7c3aed), var(--horae-primary-light, #a78bfa));
+    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.4);
+}
+
+.horae-tutorial-highlight {
+    outline: 2px solid var(--horae-primary, #7c3aed) !important;
+    outline-offset: 3px;
+    border-radius: var(--horae-radius-sm, 6px);
 }

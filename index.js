@@ -848,7 +848,9 @@ function updateTimelineDisplay() {
         const levelClass = isSummary ? 'summary' :
                           e.event?.level === '关键' ? 'critical' : 
                           e.event?.level === '重要' ? 'important' : '';
-        const levelBadge = e.event?.level ? `<span class="horae-level-badge ${levelClass}">${e.event.level}</span>` : '';
+        const levelDisplayMap = {'一般': 'Обычн.', '重要': 'Важное', '关键': 'Ключ.', '摘要': 'Конспект'};
+        const levelDisplay = levelDisplayMap[e.event?.level] || e.event?.level || '';
+        const levelBadge = e.event?.level ? `<span class="horae-level-badge ${levelClass}">${levelDisplay}</span>` : '';
         
         const dateStr = e.timestamp?.story_date || '?';
         const parsed = parseStoryDate(dateStr);
@@ -10377,7 +10379,9 @@ function showScanReviewModal(scanResults, scanOptions) {
         const itemsHtml = t.items.map(item => {
             const itemKey = escapeHtml(makeReviewKey(item));
             const levelAttr = item.level ? ` data-level="${escapeHtml(item.level)}"` : '';
-            const levelBadge = item.level ? `<span class="horae-level-badge ${item.level === '关键' ? 'critical' : item.level === '重要' ? 'important' : ''}" style="font-size:10px;margin-right:4px;">${escapeHtml(item.level)}</span>` : '';
+            const itemLevelDisplayMap = {'一般': 'Обычн.', '重要': 'Важное', '关键': 'Ключ.'};
+            const itemLevelDisplay = itemLevelDisplayMap[item.level] || item.level || '';
+            const levelBadge = item.level ? `<span class="horae-level-badge ${item.level === '关键' ? 'critical' : item.level === '重要' ? 'important' : ''}" style="font-size:10px;margin-right:4px;">${escapeHtml(itemLevelDisplay)}</span>` : '';
             const descHtml = item.desc ? `<div class="horae-review-item-sub" style="font-style:italic;opacity:0.8;">📝 ${escapeHtml(item.desc)}</div>` : '';
             return `<div class="horae-review-item" data-key="${itemKey}"${levelAttr}>
                 <div class="horae-review-item-body">

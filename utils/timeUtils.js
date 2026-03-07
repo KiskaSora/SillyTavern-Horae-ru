@@ -1,7 +1,7 @@
 /** Horae - 时间工具函数 */
 
 /** 中文周几映射 */
-const WEEKDAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
+const WEEKDAY_NAMES = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 /** 季节名称 */
 const SEASONS = ['冬季', '冬季', '春季', '春季', '春季', '夏季', '夏季', '夏季', '秋季', '秋季', '秋季', '冬季'];
@@ -71,7 +71,7 @@ export function parseStoryDate(dateStr) {
     // 清理AI写的周几标注
     let cleanStr = dateStr.trim();
     
-    const aiWeekdayMatch = cleanStr.match(/\(([日一二三四五六])\)/);
+    const aiWeekdayMatch = cleanStr.match(/\(([日一二三四五六])\)/); 
     cleanStr = cleanStr.replace(/\s*\([日一二三四五六]\)\s*/g, ' ').trim();
     
     // 无效日期按奇幻日历处理
@@ -207,28 +207,28 @@ export function calculateRelativeTime(fromDate, toDate) {
 export function formatRelativeTime(days, options = {}) {
     if (days === null || days === undefined) return '未知';
     
-    if (days === -999) return '较早';
-    if (days === -998) return '之后';
-    if (days === -997) return '之前';
+    if (days === -999) return 'ранее';
+    if (days === -998) return 'после';
+    if (days === -997) return 'до';
     
     // 近几天
-    if (days === 0) return '今天';
-    if (days === 1) return '昨天';
-    if (days === 2) return '前天';
-    if (days === 3) return '大前天';
-    if (days === -1) return '明天';
-    if (days === -2) return '后天';
-    if (days === -3) return '大后天';
+    if (days === 0) return 'Сегодня';
+    if (days === 1) return 'Вчера';
+    if (days === 2) return 'Позавчера';
+    if (days === 3) return '3 дня назад';
+    if (days === -1) return 'Завтра';
+    if (days === -2) return 'Послезавтра';
+    if (days === -3) return 'Через 3 дня';
     
     const { fromDate, toDate } = options;
     
     if (days > 0) {
-        if (days < 7) return `${days}天前`;
+        if (days < 7) return `${days} дн. назад`;
         
         // 上周几
         if (days >= 4 && days <= 13 && fromDate) {
             const weekday = fromDate.getDay();
-            return `上周${WEEKDAY_NAMES[weekday]}`;
+            return `пред. ${WEEKDAY_NAMES[weekday]}`;
         }
         
         // 上个月
@@ -236,7 +236,7 @@ export function formatRelativeTime(days, options = {}) {
             const fromMonth = fromDate.getMonth();
             const toMonth = toDate.getMonth();
             if (fromMonth !== toMonth) {
-                return `上个月${fromDate.getDate()}号`;
+                return `${fromDate.getDate()} пред. мес.`;
             }
         }
         
@@ -247,42 +247,42 @@ export function formatRelativeTime(days, options = {}) {
                 const fromMonth = fromDate.getMonth() + 1;
                 const fromDay = fromDate.getDate();
                 if (days < 730) {
-                    return `去年${fromMonth}月${fromDay}日`;
+                    return `${fromDay}.${fromMonth} пр. г.`;
                 }
             }
         }
         
-        if (days < 14) return `${Math.ceil(days / 7)}周前`;
-        if (days < 60) return `${Math.round(days / 30)}个月前`;
-        if (days < 365) return `${Math.round(days / 30)}个月前`;
+        if (days < 14) return `${Math.ceil(days / 7)} нед. назад`;
+        if (days < 60) return `${Math.round(days / 30)} мес. назад`;
+        if (days < 365) return `${Math.round(days / 30)} мес. назад`;
         const years = Math.floor(days / 365);
         const remainMonths = Math.round((days % 365) / 30);
-        if (remainMonths > 0 && years < 5) return `${years}年${remainMonths}个月前`;
-        return `${years}年前`;
+        if (remainMonths > 0 && years < 5) return `${years} г. ${remainMonths} мес. назад`;
+        return `${years} г. назад`;
     } else {
         const absDays = Math.abs(days);
-        if (absDays < 7) return `${absDays}天后`;
+        if (absDays < 7) return `через ${absDays} дн.`;
         
         if (absDays >= 4 && absDays <= 13 && fromDate) {
             const weekday = fromDate.getDay();
-            return `下周${WEEKDAY_NAMES[weekday]}`;
+            return `след. ${WEEKDAY_NAMES[weekday]}`;
         }
         
         if (absDays >= 20 && absDays < 60 && fromDate && toDate) {
             const fromMonth = fromDate.getMonth();
             const toMonth = toDate.getMonth();
             if (fromMonth !== toMonth) {
-                return `下个月${fromDate.getDate()}号`;
+                return `${fromDate.getDate()} след. мес.`;
             }
         }
         
-        if (absDays < 14) return `${Math.ceil(absDays / 7)}周后`;
-        if (absDays < 60) return `${Math.round(absDays / 30)}个月后`;
-        if (absDays < 365) return `${Math.round(absDays / 30)}个月后`;
+        if (absDays < 14) return `через ${Math.ceil(absDays / 7)} нед.`;
+        if (absDays < 60) return `через ${Math.round(absDays / 30)} мес.`;
+        if (absDays < 365) return `через ${Math.round(absDays / 30)} мес.`;
         const years = Math.floor(absDays / 365);
         const remainMonths = Math.round((absDays % 365) / 30);
-        if (remainMonths > 0 && years < 5) return `${years}年${remainMonths}个月后`;
-        return `${years}年后`;
+        if (remainMonths > 0 && years < 5) return `через ${years} г. ${remainMonths} мес.`;
+        return `через ${years} г.`;
     }
 }
 

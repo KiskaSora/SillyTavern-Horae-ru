@@ -927,15 +927,15 @@ class HoraeManager {
 
     /** 获取好感度等级描述 */
     getAffectionLevel(value) {
-        if (value >= 80) return '挚爱';
-        if (value >= 60) return '亲密';
-        if (value >= 40) return '好感';
-        if (value >= 20) return '友好';
-        if (value >= 0) return '中立';
-        if (value >= -20) return '冷淡';
-        if (value >= -40) return '厌恶';
-        if (value >= -60) return '敌视';
-        return '仇恨';
+        if (value >= 80) return 'Обожание';
+        if (value >= 60) return 'Близость';
+        if (value >= 40) return 'Симпатия';
+        if (value >= 20) return 'Дружба';
+        if (value >= 0) return 'Нейтрал';
+        if (value >= -20) return 'Холодность';
+        if (value >= -40) return 'Неприязнь';
+        if (value >= -60) return 'Враждебность';
+        return 'Ненависть';
     }
 
     /** 解析AI回复中的horae标签 */
