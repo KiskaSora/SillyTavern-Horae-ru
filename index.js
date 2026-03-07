@@ -125,7 +125,6 @@ const DEFAULT_SETTINGS = {
     customThemes: [],              // Импортированные темы оформления [{name, author, variables, css}]
     globalTables: [],              // Глобальные таблицы (общие для всех карточек персонажей)
     showTopIcon: true,             // Показывать иконку в верхней панели навигации
-    iconMode: 'topbar',            // Режим иконки: 'topbar' | 'float'
     customTablesPrompt: '',        // Пользовательский промпт для правил заполнения таблиц (пусто = по умолчанию)
     sendLocationMemory: false,     // Отправлять память о локациях (описание постоянных характеристик мест)
     customLocationPrompt: '',      // Пользовательский промпт для памяти о локациях (пусто = по умолчанию)
@@ -5788,39 +5787,20 @@ async function scrollToMessage(messageId) {
 
 /** Применить видимость верхней иконки */
 function applyTopIconVisibility() {
-    const mode = settings.iconMode || (settings.showTopIcon !== false ? 'topbar' : 'float');
-    settings.iconMode = mode;
-
-    const drawerEl  = document.getElementById('horae_drawer');
-    const contentEl = document.getElementById('horae_drawer_content');
-    const fb        = document.getElementById('horae-float-btn');
-
-    if (mode === 'topbar') {
-        // Показать иконку в топбаре
-        if (drawerEl) drawerEl.classList.remove('horae-drawer-hidden');
-        // Убрать класс float-mode с контента
-        if (contentEl) contentEl.classList.remove('horae-float-panel');
-        // Спрятать плавающую кнопку
-        if (fb) fb.style.display = 'none';
+    const show = settings.showTopIcon !== false;
+    if (show) {
+        $('#horae_drawer').show();
     } else {
-        // Скрыть иконку из топбара (только toggle, контент остаётся)
-        if (drawerEl) drawerEl.classList.add('horae-drawer-hidden');
-        // Добавить класс для центрирования контента
-        if (contentEl) contentEl.classList.add('horae-float-panel');
-        // Закрыть если открыт (чтобы переоткрылся уже центрированным)
-        if (contentEl && contentEl.classList.contains('openDrawer')) {
-            $('#horae_drawer_icon').removeClass('openIcon').addClass('closedIcon');
-            contentEl.classList.remove('openDrawer');
-            contentEl.classList.add('closedDrawer');
-            contentEl.style.display = 'none';
+        // Сначала закрыть панель, затем скрыть
+        if ($('#horae_drawer_icon').hasClass('openIcon')) {
+            $('#horae_drawer_icon').toggleClass('openIcon closedIcon');
+            $('#horae_drawer_content').toggleClass('openDrawer closedDrawer').hide();
         }
-        // Показать плавающую кнопку
-        if (fb) fb.style.display = 'flex';
-        else initFloatingIcon();
+        $('#horae_drawer').hide();
     }
-
-    $(`input[name="horae-icon-mode"][value="${mode}"]`).prop('checked', true);
-    settings.showTopIcon = (mode === 'topbar');
+    // Синхронизировать оба переключателя
+    $('#horae-setting-show-top-icon').prop('checked', show);
+    $('#horae-ext-show-top-icon').prop('checked', show);
 }
 
 /** Применить настройки ширины и смещения панели сообщений (нижняя панель + RPG HUD) */
@@ -5899,7 +5879,6 @@ function applyThemeMode() {
     // Переключить класс horae-light (нужен для дневного режима, активирует детали UI — рамки чекбоксов и т.д.)
     const targets = [
         document.getElementById('horae_drawer'),
-        document.getElementById('horae_drawer_content'),
         ...document.querySelectorAll('.horae-message-panel'),
         ...document.querySelectorAll('.horae-modal'),
         ...document.querySelectorAll('.horae-rpg-hud')
@@ -5920,22 +5899,11 @@ function applyThemeMode() {
         // Дневная пользовательская тема: добавить .horae-light для переопределения переменных класса в style.css
         const needsLightOverride = isLight && mode !== 'light';
         const selectors = needsLightOverride
-            ? '#horae_drawer,\n#horae_drawer.horae-light,\n#horae_drawer_content,\n#horae_drawer_content.horae-light,\n.horae-message-panel,\n.horae-message-panel.horae-light,\n.horae-modal,\n.horae-modal.horae-light,\n.horae-context-menu,\n.horae-context-menu.horae-light,\n.horae-rpg-hud,\n.horae-rpg-hud.horae-light,\n.horae-rpg-dice-panel,\n.horae-rpg-dice-panel.horae-light,\n.horae-progress-overlay,\n.horae-progress-overlay.horae-light'
-            : '#horae_drawer,\n#horae_drawer_content,\n.horae-message-panel,\n.horae-modal,\n.horae-context-menu,\n.horae-rpg-hud,\n.horae-rpg-dice-panel,\n.horae-progress-overlay';
+            ? '#horae_drawer,\n#horae_drawer.horae-light,\n.horae-message-panel,\n.horae-message-panel.horae-light,\n.horae-modal,\n.horae-modal.horae-light,\n.horae-context-menu,\n.horae-context-menu.horae-light,\n.horae-rpg-hud,\n.horae-rpg-hud.horae-light,\n.horae-rpg-dice-panel,\n.horae-rpg-dice-panel.horae-light,\n.horae-progress-overlay,\n.horae-progress-overlay.horae-light'
+            : '#horae_drawer,\n.horae-message-panel,\n.horae-modal,\n.horae-context-menu,\n.horae-rpg-hud,\n.horae-rpg-dice-panel,\n.horae-progress-overlay';
         themeStyleEl.textContent = `${selectors} {\n${vars}\n}`;
     } else {
         if (themeStyleEl) themeStyleEl.remove();
-    }
-
-    // Обновить цвет плавающей кнопки под текущую тему
-    const _fb = document.getElementById('horae-float-btn');
-    if (_fb) {
-        const primary = theme?.variables?.['--horae-primary'] || '#7c3aed';
-        const primaryDark = theme?.variables?.['--horae-primary-dark'] || '#5b21b6';
-        _fb.style.setProperty('--fb-primary', primary);
-        _fb.style.setProperty('--fb-primary-dark', primaryDark);
-        _fb.style.background = `linear-gradient(135deg, ${primaryDark}, ${primary})`;
-        _fb.style.boxShadow = `0 4px 16px ${primary}70`;
     }
 
     // Инжектировать прикреплённый CSS темы
@@ -7951,9 +7919,8 @@ function initSettingsEvents() {
         });
     });
     
-    $(document).on('change', 'input[name="horae-icon-mode"]', function() {
-        settings.iconMode = this.value;
-        settings.showTopIcon = (this.value === 'topbar');
+    $('#horae-setting-show-top-icon').on('change', function() {
+        settings.showTopIcon = this.checked;
         saveSettings();
         applyTopIconVisibility();
     });
@@ -8986,8 +8953,8 @@ function syncSettingsToUI() {
     $('#horae-setting-auto-parse').prop('checked', settings.autoParse);
     $('#horae-setting-inject-context').prop('checked', settings.injectContext);
     $('#horae-setting-show-panel').prop('checked', settings.showMessagePanel);
-    const _iconMode = settings.iconMode || (settings.showTopIcon !== false ? 'topbar' : 'float');
-    $(`input[name="horae-icon-mode"][value="${_iconMode}"]`).prop('checked', true);
+    $('#horae-setting-show-top-icon').prop('checked', settings.showTopIcon !== false);
+    $('#horae-ext-show-top-icon').prop('checked', settings.showTopIcon !== false);
     $('#horae-setting-context-depth').val(settings.contextDepth);
     $('#horae-setting-injection-position').val(settings.injectionPosition);
     $('#horae-setting-send-timeline').prop('checked', settings.sendTimeline);
@@ -10412,9 +10379,9 @@ function showScanReviewModal(scanResults, scanOptions) {
         const itemsHtml = t.items.map(item => {
             const itemKey = escapeHtml(makeReviewKey(item));
             const levelAttr = item.level ? ` data-level="${escapeHtml(item.level)}"` : '';
-            const itemLevelDisplayMap = {'一般': 'Обычн.', '重要': 'Важное', '关键': 'Ключ.'};
-            const itemLevelDisplay = itemLevelDisplayMap[item.level] || item.level || '';
-            const levelBadge = item.level ? `<span class="horae-level-badge ${item.level === '关键' ? 'critical' : item.level === '重要' ? 'important' : ''}" style="font-size:10px;margin-right:4px;">${escapeHtml(itemLevelDisplay)}</span>` : '';
+            const itemLvlMap = {'一般': 'Обычн.', '重要': 'Важное', '关键': 'Ключ.'};
+            const itemLvlDisplay = itemLvlMap[item.level] || item.level || '';
+            const levelBadge = item.level ? `<span class="horae-level-badge ${item.level === '关键' ? 'critical' : item.level === '重要' ? 'important' : ''}" style="font-size:10px;margin-right:4px;">${escapeHtml(itemLvlDisplay)}</span>` : '';
             const descHtml = item.desc ? `<div class="horae-review-item-sub" style="font-style:italic;opacity:0.8;">📝 ${escapeHtml(item.desc)}</div>` : '';
             return `<div class="horae-review-item" data-key="${itemKey}"${levelAttr}>
                 <div class="horae-review-item-body">
@@ -11486,142 +11453,6 @@ function showTutorialStep(step, current, total, isLast) {
 // Инициализировать 
 // ============================================
 
-// ============================================
-// Плавающая иконка (перетаскиваемая)
-// ============================================
-
-function initFloatingIcon() {
-    // Не дублировать
-    if (document.getElementById('horae-float-btn')) return;
-
-    const STORAGE_KEY = 'horae_float_pos';
-
-    // Загрузить сохранённую позицию
-    let savedPos = { right: 16, bottom: 80 };
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) savedPos = JSON.parse(raw);
-    } catch (e) {}
-
-    // Создать кнопку
-    const btn = document.createElement('div');
-    btn.id = 'horae-float-btn';
-    btn.title = 'Horae — Память Времени';
-    btn.innerHTML = '<i class="fa-regular fa-clock"></i>';
-    btn.style.right  = savedPos.right  + 'px';
-    btn.style.bottom = savedPos.bottom + 'px';
-    const _mode = (typeof settings !== 'undefined' && settings.iconMode) ? settings.iconMode : 'float';
-    btn.style.display = _mode === 'float' ? 'flex' : 'none';
-    document.body.appendChild(btn);
-
-    // --- Логика drag vs click ---
-    let dragging = false;
-    let startX, startY, startRight, startBottom;
-    let moved = false;
-
-    function getViewport() {
-        return { w: window.innerWidth, h: window.innerHeight };
-    }
-
-    function applyPos(right, bottom) {
-        const vp = getViewport();
-        const bw = btn.offsetWidth  || 48;
-        const bh = btn.offsetHeight || 48;
-        right  = Math.max(0, Math.min(right,  vp.w - bw));
-        bottom = Math.max(0, Math.min(bottom, vp.h - bh));
-        btn.style.right  = right  + 'px';
-        btn.style.bottom = bottom + 'px';
-    }
-
-    function savePos() {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                right:  parseFloat(btn.style.right),
-                bottom: parseFloat(btn.style.bottom)
-            }));
-        } catch (e) {}
-    }
-
-    // --- Mouse ---
-    btn.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        dragging = true;
-        moved = false;
-        startX = e.clientX;
-        startY = e.clientY;
-        startRight  = parseFloat(btn.style.right)  || 16;
-        startBottom = parseFloat(btn.style.bottom) || 80;
-        btn.classList.add('horae-float-dragging');
-        e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
-        applyPos(startRight - dx, startBottom - dy);
-    });
-
-    document.addEventListener('mouseup', (e) => {
-        if (!dragging) return;
-        dragging = false;
-        btn.classList.remove('horae-float-dragging');
-        if (moved) {
-            savePos();
-        } else {
-            toggleHoraeDrawer();
-        }
-    });
-
-    // --- Touch ---
-    btn.addEventListener('touchstart', (e) => {
-        const t = e.touches[0];
-        dragging = true;
-        moved = false;
-        startX = t.clientX;
-        startY = t.clientY;
-        startRight  = parseFloat(btn.style.right)  || 16;
-        startBottom = parseFloat(btn.style.bottom) || 80;
-        btn.classList.add('horae-float-dragging');
-        e.preventDefault();
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-        if (!dragging) return;
-        const t = e.touches[0];
-        const dx = t.clientX - startX;
-        const dy = t.clientY - startY;
-        if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
-        applyPos(startRight - dx, startBottom - dy);
-        if (moved) e.preventDefault();
-    }, { passive: false });
-
-    document.addEventListener('touchend', () => {
-        if (!dragging) return;
-        dragging = false;
-        btn.classList.remove('horae-float-dragging');
-        if (moved) {
-            savePos();
-        } else {
-            toggleHoraeDrawer();
-        }
-    });
-
-    // Resize: не уехать за экран
-    window.addEventListener('resize', () => applyPos(
-        parseFloat(btn.style.right),
-        parseFloat(btn.style.bottom)
-    ));
-}
-
-function toggleHoraeDrawer() {
-    // Просто кликаем по настоящей иконке — ST сам управляет анимацией открытия
-    const icon = document.getElementById('horae_drawer_icon');
-    if (icon) icon.click();
-}
-
-
 jQuery(async () => {
     console.log(`[Horae] Загрузка v${VERSION}...`);
 
@@ -11649,8 +11480,11 @@ jQuery(async () => {
     $('#extensions_settings2').append(extToggleHtml);
     
     // Привязать переключатель иконки в панели расширений (переключение свёртывания управляется глобальным обработчиком SillyTavern)
-    // horae-ext-show-top-icon replaced by radio mode
-
+    $('#horae-ext-show-top-icon').on('change', function() {
+        settings.showTopIcon = this.checked;
+        saveSettings();
+        applyTopIconVisibility();
+    });
 
     await initDrawer();
     initTabs();
@@ -11692,10 +11526,6 @@ jQuery(async () => {
         setTimeout(() => startTutorial(), 800);
     }
     
-    if ((settings.iconMode || 'topbar') === 'float') {
-        initFloatingIcon();
-    }
-
     isInitialized = true;
     console.log(`[Horae] v${VERSION} загружен! Автор: SenriYuki`);
 });

@@ -71,7 +71,7 @@ export function parseStoryDate(dateStr) {
     // 清理AI写的周几标注
     let cleanStr = dateStr.trim();
     
-    const aiWeekdayMatch = cleanStr.match(/\(([日一二三四五六])\)/); 
+    const aiWeekdayMatch = cleanStr.match(/\(([日一二三四五六])\)/);
     cleanStr = cleanStr.replace(/\s*\([日一二三四五六]\)\s*/g, ' ').trim();
     
     // 无效日期按奇幻日历处理

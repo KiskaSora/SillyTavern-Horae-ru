@@ -34,8 +34,9 @@
 .horae-message-panel,
 .horae-modal,
 .horae-context-menu,
-.horae-progress-overlay,
-
+.horae-progress-overlay {
+    color: var(--horae-text);
+}
 
 /* 输入框隔离 */
 #horae_drawer input:not([type="checkbox"]):not([type="radio"]),
@@ -77,9 +78,9 @@
 .horae-modal input[type="checkbox"] {
     -webkit-appearance: none !important;
     appearance: none !important;
-    background: var(--horae-bg-secondary, #2a2a3a) !important;
+    background: white !important;
     background-image: none !important;
-    border: 2px solid var(--horae-border, #555) !important;
+    border: 2px solid #888 !important;
     border-radius: 3px !important;
     opacity: 1 !important;
     position: static !important;
@@ -100,8 +101,8 @@
 #horae_drawer input[type="checkbox"]:checked,
 .horae-message-panel input[type="checkbox"]:checked,
 .horae-modal input[type="checkbox"]:checked {
-    background: var(--horae-primary, #7c3aed) !important;
-    border-color: var(--horae-primary, #7c3aed) !important;
+    background: white !important;
+    border-color: #555 !important;
 }
 
 #horae_drawer input[type="checkbox"]:checked::after,
@@ -110,7 +111,7 @@
     content: '✓' !important;
     display: block !important;
     text-align: center !important;
-    color: #fff !important;
+    color: #222 !important;
     font-size: 12px !important;
     font-weight: 700 !important;
     line-height: 12px !important;
@@ -372,13 +373,13 @@
     justify-content: center;
     gap: 6px;
     padding: 8px 16px;
-    background: var(--horae-bg-secondary) !important;
-    border: 1px solid var(--horae-border) !important;
-    border-radius: var(--horae-radius-sm) !important;
-    color: var(--horae-text) !important;
-    cursor: pointer !important;
-    font-size: 13px !important;
-    transition: all 0.2s ease !important;
+    background: var(--horae-bg-secondary);
+    border: 1px solid var(--horae-border);
+    border-radius: var(--horae-radius-sm);
+    color: var(--horae-text);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
     background-image: none !important;
     opacity: 1 !important;
 }
@@ -417,12 +418,12 @@
 }
 
 .horae-data-btn {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    padding: 16px 12px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 12px;
     background: var(--horae-bg) !important;
     background-image: none !important;
     border: 1px solid var(--horae-border) !important;
@@ -1184,7 +1185,6 @@
     width: 18px !important;
     height: 18px !important;
     min-width: 18px !important;
-    min-height: 18px !important;
     background: var(--horae-bg-secondary, #2a2a3a) !important;
     background-image: none !important;
     border: 2px solid var(--horae-border, #555) !important;
@@ -1194,17 +1194,14 @@
     vertical-align: middle !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
-    position: relative !important;
     opacity: 1 !important;
     margin: 0 !important;
 }
-
 .horae-setting-item input[type="checkbox"]:checked {
     background: var(--horae-primary, #7c3aed) !important;
     border-color: var(--horae-primary, #7c3aed) !important;
     background-image: none !important;
 }
-
 .horae-setting-item input[type="checkbox"]:checked::after {
     content: '✓' !important;
     display: block !important;
@@ -5111,210 +5108,4 @@ body .horae-context-menu {
 .horae-rpg-dice-inject:hover { opacity: 0.85; }
 @media screen and (max-width: 768px) {
     .horae-rpg-dice-body { width: 220px; }
-}
-
-/* === Tutorial / Onboarding Card === */
-.horae-tutorial-card {
-    background: var(--horae-bg-secondary, #1e1e2e);
-    border: 1px solid var(--horae-primary, #7c3aed);
-    border-radius: var(--horae-radius, 10px);
-    margin: 12px 0;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
-}
-
-.horae-tutorial-card-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    background: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed));
-    color: #fff;
-    font-size: 13px;
-}
-
-.horae-tutorial-step-indicator {
-    font-size: 11px;
-    opacity: 0.75;
-    background: rgba(255,255,255,0.15);
-    padding: 2px 7px;
-    border-radius: 20px;
-    white-space: nowrap;
-}
-
-.horae-tutorial-card-body {
-    padding: 12px 14px;
-    font-size: 13px;
-    color: var(--horae-text, #e2e2f0);
-    line-height: 1.6;
-}
-
-.horae-tutorial-card-foot {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 10px 14px;
-    background: var(--horae-bg-primary, #16161e);
-    border-top: 1px solid var(--horae-border, #333);
-}
-
-.horae-tutorial-skip {
-    padding: 6px 14px !important;
-    border-radius: var(--horae-radius-sm, 6px) !important;
-    border: 1px solid var(--horae-border, #555) !important;
-    background: var(--horae-bg-secondary, #2a2a3a) !important;
-    background-image: none !important;
-    color: var(--horae-text-muted, #aaa) !important;
-    font-size: 12px !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
-}
-
-.horae-tutorial-skip:hover {
-    background: var(--horae-bg-hover, #3a3a4a) !important;
-    color: var(--horae-text, #e2e2f0) !important;
-}
-
-.horae-tutorial-next {
-    padding: 6px 16px !important;
-    border-radius: var(--horae-radius-sm, 6px) !important;
-    border: none !important;
-    background: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed)) !important;
-    background-image: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed)) !important;
-    color: #fff !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
-}
-
-.horae-tutorial-next:hover {
-    background: linear-gradient(135deg, var(--horae-primary, #7c3aed), var(--horae-primary-light, #a78bfa));
-    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.4);
-}
-
-.horae-tutorial-highlight {
-    outline: 2px solid var(--horae-primary, #7c3aed) !important;
-    outline-offset: 3px;
-    border-radius: var(--horae-radius-sm, 6px);
-}
-
-/* ============================================
-   Плавающая иконка Horae
-   ============================================ */
-
-#horae-float-btn {
-    position: fixed !important;
-    right: 16px;
-    bottom: 80px;
-    z-index: 9999;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    /* Цвет устанавливается JS при смене темы, fallback — фиолетовый */
-    background: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed));
-    color: #fff !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.45);
-    cursor: grab;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
-    border: 2px solid rgba(255,255,255,0.2);
-    transition: box-shadow 0.2s ease, transform 0.15s ease;
-}
-
-#horae-float-btn:hover {
-    box-shadow: 0 6px 24px rgba(124, 58, 237, 0.65);
-    transform: scale(1.08);
-}
-
-#horae-float-btn.horae-float-dragging {
-    cursor: grabbing !important;
-    transform: scale(1.12);
-    box-shadow: 0 8px 30px rgba(124, 58, 237, 0.7);
-    transition: none;
-}
-
-#horae-float-btn i {
-    pointer-events: none;
-}
-
-/* На мобиле чуть крупнее для удобства */
-@media (max-width: 768px) {
-    #horae-float-btn {
-        width: 52px;
-        height: 52px;
-        font-size: 22px;
-    }
-}
-
-
-/* Режим иконки - радио-кнопки */
-.horae-icon-mode-option {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: var(--horae-radius-sm, 6px);
-    border: 1px solid var(--horae-border, #555);
-    background: var(--horae-bg-secondary, #2a2a3a) !important;
-    background-image: none !important;
-    color: var(--horae-text-muted, #aaa);
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s;
-    user-select: none;
-}
-
-.horae-icon-mode-option input[type="radio"] {
-    display: none !important;
-}
-
-.horae-icon-mode-option:has(input:checked) {
-    background: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed)) !important;
-    background-image: linear-gradient(135deg, var(--horae-primary-dark, #5b21b6), var(--horae-primary, #7c3aed)) !important;
-    border-color: var(--horae-primary, #7c3aed) !important;
-    color: #fff !important;
-}
-
-.horae-icon-mode-option:hover {
-    border-color: var(--horae-primary, #7c3aed);
-    color: var(--horae-text, #e2e2f0);
-}
-
-
-}
-
-/* Затемнение фона при открытой плавающей панели */
-
-
-/* === Плавающий режим иконки === */
-
-/* Скрыть иконку из топбара в float-режиме */
-#horae_drawer.horae-drawer-hidden {
-    display: none !important;
-}
-
-/* Центрировать панель в float-режиме */
-#horae_drawer_content.horae-float-panel.openDrawer {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    z-index: 9998 !important;
-    max-height: 90vh !important;
-    overflow-y: auto !important;
-    width: min(700px, 95vw) !important;
-    border-radius: var(--horae-radius, 8px) !important;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.6) !important;
-    animation: horae-panel-appear 0.18s ease;
-}
-
-@keyframes horae-panel-appear {
-    from { opacity: 0; transform: translate(-50%, -47%); }
-    to   { opacity: 1; transform: translate(-50%, -50%); }
 }
